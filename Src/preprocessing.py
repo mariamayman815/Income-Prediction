@@ -125,39 +125,3 @@ if __name__ == "__main__":
    
 
 
-if __name__ == "__main__":
-    X, y, scaler, le = preprocess_pipeline()
-    
-    print("\n" + "="*50)
-    print("🔍 التحقق من جودة الـ Preprocessing:")
-    print("="*50)
-    
-    # 1. التحقق من الـ Scaling
-    numeric_cols = ['age', 'education', 'education-num', 
-                   'capital-gain', 'capital-loss', 'hours-per-week']
-    
-    print("\nمتوسط الأعمدة الرقمية (يجب يكون قريب جدًا من 0):")
-    print(X[numeric_cols].mean().round(4))
-    
-    print("\nالانحراف المعياري (يجب يكون قريب من 1):")
-    print(X[numeric_cols].std().round(4))
-    
-    # 2. التحققات الأخرى
-    print(f"\nعدد الـ NaN: {X.isnull().sum().sum()}")
-    print(f"عدد التكرارات: {X.duplicated().sum()}")
-    print(f"Target distribution:\n{y.value_counts()}")
-    
-    # 3. حفظ البيانات المعالجة (مهم)
-    import joblib
-    from pathlib import Path
-    
-    processed_dir = Path("Data/processed")
-    processed_dir.mkdir(parents=True, exist_ok=True)
-    
-    X.to_csv(processed_dir / "X_train.csv", index=False)
-    y.to_csv(processed_dir / "y_train.csv", index=False)
-    
-    joblib.dump(scaler, processed_dir / "scaler.pkl")
-    joblib.dump(le, processed_dir / "label_encoder.pkl")
-    
-    print(f"\n✅ تم حفظ البيانات المعالجة في: {processed_dir}")
