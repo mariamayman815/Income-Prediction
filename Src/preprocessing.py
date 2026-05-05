@@ -1,127 +1,157 @@
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler, LabelEncoder
+# import pandas as pd
+# import numpy as np
+# from sklearn.preprocessing import OrdinalEncoder, StandardScaler, LabelEncoder
+# from pathlib import Path
+# import joblib
+# import os
 
-def load_data(path=r'E:\Uni\AI\AI-Income-Project\Data\raw\trainincome_data.csv'):
-    """Loading data"""
-    df = pd.read_csv(path)
-    return df
-
-
-def clean_data(df):
-    """Data cleaning"""
-    # Useless spaces
-    object_cols = df.select_dtypes(include=['object', 'string']).columns
-    for col in object_cols:
-        df[col] = df[col].str.strip()
+# def load_data():
+#     """Load data"""
+#     base_dir = Path(__file__).parent.parent  
+#     possible_paths = [
+#         base_dir / "Data/raw/trainincome_data.csv",
+#         base_dir / "data/raw/trainincome_data.csv",
+#         Path("Data/raw/trainincome_data.csv"),
+#         Path("../Data/raw/trainincome_data.csv"),
+#     ]
     
-    # Missing values
-    df.replace('?', np.nan, inplace=True)
-    for col in ['workclass', 'occupation', 'native-country']:
-        df[col] = df[col].fillna(df[col].mode()[0])
+#     for p in possible_paths:
+#         if p.exists():
+#             print(f"File found sucessfully: {p}")
+#             return pd.read_csv(p)
     
-    # Drop fnlwgt
-    if 'fnlwgt' in df.columns:
-        df.drop('fnlwgt', axis=1, inplace=True)
-    
-    # إRemove duplicates
-    df = df.drop_duplicates()
-    
-    return df
+#     raise FileNotFoundError(f"""File not found!Check the path:
+#     {base_dir}/Data/raw/trainincome_data.csv
+#     """)
 
 
-def handle_outliers(df):
-    """Handling  Outliers"""
-    # Log transformation for capital-gain and capital-loss
-    df['capital-gain'] = np.log1p(df['capital-gain'])
-    df['capital-loss'] = np.log1p(df['capital-loss'])
+# def clean_data(df):
+#     """ Data cleaning"""
+#     # Handing spaces
+#     object_cols = df.select_dtypes(include=['object', 'string']).columns
+#     for col in object_cols:
+#         df[col] = df[col].str.strip()
     
-    # Clipping -> age and hours-per-week
-    for col in ['age', 'hours-per-week']:
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-        lower = Q1 - 1.5 * IQR
-        upper = Q3 + 1.5 * IQR
-        df[col] = df[col].clip(lower, upper)
+#     # Replace ? with NaN
+#     df.replace('?', np.nan, inplace=True)
+#     for col in ['workclass', 'occupation', 'native-country']:
+#         if col in df.columns and df[col].isna().any():
+#             df[col] = df[col].fillna(df[col].mode()[0])
     
-    return df
+#     # Drop fnlwgt
+#     if 'fnlwgt' in df.columns:
+#         df.drop('fnlwgt', axis=1, inplace=True)
+    
+#     # Remove duplicates
+#     df = df.drop_duplicates().reset_index(drop=True)
+#     print(f" After removing duplicates: {df.shape[0]} rows")
+    
+#     return df
 
 
-def encode_features(df):
-    """Encoding variables"""
-    # One-Hot Encoding
-    one_hot_cols = [
-        'sex', 'workclass', 'marital-status', 'occupation',
-        'relationship', 'race', 'native-country'
-    ]
-    df = pd.get_dummies(df, columns=one_hot_cols)
+# def handle_outliers(df):
+#     """Handling Outliers"""
+#     df['capital-gain'] = np.log1p(df['capital-gain'])
+#     df['capital-loss'] = np.log1p(df['capital-loss'])
     
-    # Ordinal Encoding for education
-    education_order = [
-        'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th',
-        '11th', '12th', 'HS-grad', 'Some-college', 'Assoc-voc',
-        'Assoc-acdm', 'Bachelors', 'Masters', 'Prof-school', 'Doctorate'
-    ]
+#     for col in ['age', 'hours-per-week']:
+#         Q1 = df[col].quantile(0.25)
+#         Q3 = df[col].quantile(0.75)
+#         IQR = Q3 - Q1
+#         lower = Q1 - 1.5 * IQR
+#         upper = Q3 + 1.5 * IQR
+#         df[col] = df[col].clip(lower, upper)
     
-    encoder = OrdinalEncoder(categories=[education_order])
-    df['education'] = encoder.fit_transform(df[['education']])
-    
-    # Label Encoding for Target
-    le = LabelEncoder()
-    df['Income '] = le.fit_transform(df['Income '])
-    
-    return df, le
+#     return df
 
 
-def scale_features(X, numeric_cols):
-    """Scaling numercal variables"""
-    scaler = StandardScaler()
-    X_numeric_scaled = scaler.fit_transform(X[numeric_cols])
-    X_numeric_scaled = pd.DataFrame(X_numeric_scaled, 
-                                  columns=numeric_cols, 
-                                  index=X.index)
+# def encode_features(df):
+#     """Encoding"""
+#     # One-Hot Encoding
+#     one_hot_cols = ['sex', 'workclass', 'marital-status', 
+#                    'occupation', 'relationship', 'race', 'native-country']
+#     df = pd.get_dummies(df, columns=one_hot_cols, dtype=bool)
     
-    X_categorical = X.drop(columns=numeric_cols)
-    X_final = pd.concat([X_numeric_scaled, X_categorical], axis=1)
+#     # Ordinal Encoding for education
+#     education_order = [
+#         'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th',
+#         '11th', '12th', 'HS-grad', 'Some-college', 'Assoc-voc',
+#         'Assoc-acdm', 'Bachelors', 'Masters', 'Prof-school', 'Doctorate'
+#     ]
+#     encoder = OrdinalEncoder(categories=[education_order])
+#     df['education'] = encoder.fit_transform(df[['education']])
     
-    return X_final, scaler
+#     # Label Encoding for Target
+#     le = LabelEncoder()
+#     df['Income '] = le.fit_transform(df['Income '])
+    
+#     return df, le
 
 
-def preprocess_pipeline(path=r'E:\Uni\AI\AI-Income-Project\Data\raw\trainincome_data.csv'):
-    """Full Pipeline """
-    print(" Start Preprocessing...")
+# def scale_features(X):
+#     """ Scaling"""
+#     numeric_cols = ['age', 'education-num', 
+#                    'capital-gain', 'capital-loss', 'hours-per-week']
     
-    # 1. Loading data
-    df = load_data(path)
+#     scaler = StandardScaler()
+#     X_numeric = scaler.fit_transform(X[numeric_cols])
+#     X_numeric = pd.DataFrame(X_numeric, columns=numeric_cols, index=X.index)
     
-    # 2. data cleaning
-    df = clean_data(df)
+#     X_final = pd.concat([X_numeric, X.drop(columns=numeric_cols)], axis=1)
     
-    # 3. handling Outliers
-    df = handle_outliers(df)
-    
-    # 4. label encoding
-    df, label_encoder = encode_features(df)
-    
-    # 5. Separate X و y
-    X = df.drop('Income ', axis=1)
-    y = df['Income ']
-    
-    # 6. Scaling
-    numeric_cols = ['age', 'education', 'education-num', 
-                   'capital-gain', 'capital-loss', 'hours-per-week']
-    
-    X_final, scaler = scale_features(X, numeric_cols)
-    
-    print(f" Done sucessfully!final data: {X_final.shape}")
-    print(f"Numbers of features: {X_final.shape[1]}")
-    
-    return X_final, y, scaler, label_encoder
+#     return X_final, scaler
 
 
-if __name__ == "__main__":
-    X, y, scaler, le = preprocess_pipeline()
-   
+# def preprocess_pipeline():
+#     """ Pipeline Full"""
+#     print(" Start Preprocessing...\n")
+    
+#     df = load_data()
+#     df = clean_data(df)
+#     df = handle_outliers(df)
+#     df, label_encoder = encode_features(df)
+    
+#     # Split
+#     X = df.drop('Income ', axis=1)
+#     y = df['Income ']
+    
+#     # Scaling
+#     X_final, scaler = scale_features(X)
+    
+#     # ==============================
+#     #  Handle conflicting duplicates 
+#     # ==============================
+#     Xy = pd.concat([X_final, y], axis=1)
+    
+#     #  majority voting
+#     Xy_clean = Xy.groupby(list(X_final.columns))['Income '].agg(lambda x: x.mode()[0]).reset_index()
+    
+#     X_final = Xy_clean.drop('Income ', axis=1)
+#     y = Xy_clean['Income ']
+    
+#     # ==============================
+#     print(f"\n Done! final shape: {X_final.shape}")
+#     print(f"No duplicates: {Xy_clean.duplicated().sum()}")
+#     print(f"Distribution Target:\n{y.value_counts()}")
+    
+#     return X_final, y, scaler, label_encoder
 
 
+# def save_artifacts(X, y, scaler, le, dir_path="Data/processed"):
+#     """ Save files"""
+#     path = Path(dir_path)
+#     path.mkdir(parents=True, exist_ok=True)
+    
+#     X.to_csv(path / "X_processed.csv", index=False)
+#     y.to_csv(path / "y_train.csv", index=False)
+#     joblib.dump(scaler, path / "scaler.pkl")
+#     joblib.dump(le, path / "label_encoder.pkl")
+    
+#     print(f"Files saved in : {path}")
+
+
+# if __name__ == "__main__":
+#     X, y, scaler, le = preprocess_pipeline()
+#     save_artifacts(X, y, scaler, le)
+    
+    
